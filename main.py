@@ -12,18 +12,20 @@ meteorite_1 = pygame.image.load('meteorite_1.png').convert_alpha()
 meteorite_1_mask = pygame.mask.from_surface(meteorite_1)
 meteorite_2 = pygame.image.load('meteorite_2.png').convert_alpha()
 meteorite_2_mask = pygame.mask.from_surface(meteorite_2)
+projectile = pygame.image.load('projectile.png').convert_alpha()
+projectile_mask = pygame.mask.from_surface(projectile)
 clock = pygame.time.Clock()
 run = True
 player_position = [368, 750]
 hp = 3
 text_font = pygame.font.SysFont("Arial", 40)
 moving_up = False;moving_down = False;moving_left = False;moving_right = False
-meteorites_1 = [];meteorites_2 = []
+meteorites_1 = [];meteorites_2 = []; projectile_position = []
 meteorite_spawn_time_1 = 2000;meteorite_spawn_time_2 = 4100
 last_spawn_time_1 = pygame.time.get_ticks();last_spawn_time_2 = pygame.time.get_ticks()
 meteorite_falling_speed_1 = 6;meteorite_falling_speed_2 = 4
-invulnerability = 0
-death_time = 0
+invulnerability = death_time = 0
+projectile_cooldown = 180
 def draw_text(text, font, text_col, x, y):
     img = font.render(text, True, text_col)
     screen.blit(img, (x, y))
@@ -90,5 +92,6 @@ while run:
             if event.key == K_s: moving_down = False
             if event.key == K_a: moving_left = False
             if event.key == K_d: moving_right = False
+            print(2)
     pygame.display.update()
     clock.tick(60)
