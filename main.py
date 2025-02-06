@@ -19,13 +19,12 @@ run = True
 player_position = [368, 750]
 hp = 3
 text_font = pygame.font.SysFont("Arial", 40)
-moving_up = False;moving_down = False;moving_left = False;moving_right = False
-meteorites_1 = [];meteorites_2 = []; projectile_position = []
-meteorite_spawn_time_1 = 2000;meteorite_spawn_time_2 = 4100
+moving_up = False;moving_down = False;moving_left = False;moving_right = False; shooting = False
+meteorites_1 = [];meteorites_2 = []; projectile_position = [0, 0]
+meteorite_spawn_time_1 = 1400;meteorite_spawn_time_2 = 3250
 last_spawn_time_1 = pygame.time.get_ticks();last_spawn_time_2 = pygame.time.get_ticks()
 meteorite_falling_speed_1 = 6;meteorite_falling_speed_2 = 4
-invulnerability = death_time = 0
-projectile_cooldown = 180
+death_time = 0; projectile_cooldown = 180
 def draw_text(text, font, text_col, x, y):
     img = font.render(text, True, text_col)
     screen.blit(img, (x, y))
@@ -37,43 +36,39 @@ while run:
         current_time = pygame.time.get_ticks()
         if current_time - last_spawn_time_1 > meteorite_spawn_time_1:
             meteorite = random.randint(0, window_size[0] - meteorite_1.get_width())
-            meteorites_1.append([meteorite, -meteorite_1.get_height()])
+            meteorites_1.append([meteorite, -meteorite_1.get_height(), 1])
             last_spawn_time_1 = current_time
-            if meteorite_spawn_time_1 > 1500:meteorite_spawn_time_1 -= 17
-            elif meteorite_spawn_time_1 > 1000:meteorite_spawn_time_1 -= 10
-            else:meteorite_spawn_time_1 -= 6
-            if meteorite_falling_speed_1 < 8.5:meteorite_falling_speed_1 += 0.05
-            elif meteorite_falling_speed_1 < 10:meteorite_falling_speed_1 += 0.04
-            else:meteorite_falling_speed_1 += 0.03
         if current_time - last_spawn_time_2 > meteorite_spawn_time_2:
             meteorite = random.randint(0, window_size[0] - meteorite_2.get_width())
-            meteorites_2.append([meteorite, -meteorite_2.get_height()])
+            meteorites_2.append([meteorite, -meteorite_2.get_height(), 1])
             last_spawn_time_2 = current_time
-            if meteorite_spawn_time_2 > 3000:meteorite_spawn_time_2-=24
-            elif meteorite_spawn_time_2 > 2000:meteorite_spawn_time_2-=15
-            else:meteorite_spawn_time_2-=8
-            if meteorite_falling_speed_2 < 6.5:meteorite_falling_speed_2 += 0.06
-            elif meteorite_falling_speed_2 < 8:meteorite_falling_speed_2 += 0.05
-            else:meteorite_falling_speed_2 += 0.04
+        if shooting and projectile_position[1] > -9:projectile_position[1] -= 8
+        else:shooting = False
         for meteorite in meteorites_2[:]:
             meteorite[1] += meteorite_falling_speed_2
             if meteorite[1] > window_size[1]:meteorites_2.remove(meteorite)
-            else:screen.blit(meteorite_2, meteorite)
-            if player_mask.overlap(meteorite_2_mask, (meteorite[0]-player_position[0],meteorite[1] - player_position[1])) and invulnerability <= 0:
-                if hp > 1:hp -= 1; invulnerability = 60
+            elif projectile_mask.overlap(meteorite_2_mask, (meteorite[0]-projectile_position[0],meteorite[1] - projectile_position[1])) and shooting:meteorites_2.remove(meteorite); shooting = False
+            else:screen.blit(meteorite_2, [meteorite[0], meteorite[1]])
+            if player_mask.overlap(meteorite_2_mask, (meteorite[0]-player_position[0],meteorite[1] - player_position[1])) and meteorite[2]:
+                meteorite[2] = 0
+                if hp > 1:hp -= 1
                 else:death_time = pygame.time.get_ticks();hp = 0
         for meteorite in meteorites_1[:]:
             meteorite[1] += meteorite_falling_speed_1
             if meteorite[1] > window_size[1]:meteorites_1.remove(meteorite)
-            else:screen.blit(meteorite_1, meteorite)
-            if player_mask.overlap(meteorite_1_mask, (meteorite[0]-player_position[0],meteorite[1] - player_position[1])) and invulnerability <= 0:
-                if hp > 1:hp -= 1; invulnerability = 60
+            elif projectile_mask.overlap(meteorite_1_mask, (meteorite[0]-projectile_position[0],meteorite[1] - projectile_position[1])) and shooting:meteorites_1.remove(meteorite); shooting = False
+            else:screen.blit(meteorite_1, [meteorite[0], meteorite[1]])
+            if player_mask.overlap(meteorite_1_mask, (meteorite[0]-player_position[0],meteorite[1] - player_position[1])) and meteorite[2]:
+                meteorite[2] = 0
+                if hp > 1:hp -= 1
                 else:death_time = pygame.time.get_ticks();hp = 0
-        if moving_up: player_position[1] = max(player_position[1] - 5, -4)
-        if moving_down: player_position[1] = min(player_position[1] + 5, 820)
-        if moving_left: player_position[0] = max(player_position[0] - 5, -8)
-        if moving_right: player_position[0] = min(player_position[0] + 5, 728)
-        invulnerability -= 1
+        if shooting:
+            screen.blit(projectile, projectile_position)
+        if moving_up: player_position[1] = max(player_position[1] - 6, -4)
+        if moving_down: player_position[1] = min(player_position[1] + 6, 820)
+        if moving_left: player_position[0] = max(player_position[0] - 6, -8)
+        if moving_right: player_position[0] = min(player_position[0] + 6, 728)
+        projectile_cooldown += 1; meteorite_falling_speed_1 += 0.002; meteorite_falling_speed_2 += 0.002; meteorite_spawn_time_1 -= 0.17; meteorite_spawn_time_2 -= 0.14
     else:
         draw_text("YOU DIED", text_font, (255, 0, 0), 300, 450)
         if pygame.time.get_ticks() - death_time > 1000:
@@ -92,6 +87,8 @@ while run:
             if event.key == K_s: moving_down = False
             if event.key == K_a: moving_left = False
             if event.key == K_d: moving_right = False
-            print(2)
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == pygame.BUTTON_LEFT and projectile_cooldown >= 180:
+                shooting = True; projectile_cooldown = 0; projectile_position = [player_position[0]+36, player_position[1]-4]
     pygame.display.update()
     clock.tick(60)
